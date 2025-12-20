@@ -9,7 +9,7 @@ import (
     "regexp"
     "strings"
     "time"
-    "github.com/teammate_search/models"
+    "github.com/DmitriySama/teammate_search/internal/models"
 )
 
 
