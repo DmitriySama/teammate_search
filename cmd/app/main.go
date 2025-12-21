@@ -12,7 +12,6 @@ func main() {
     http.HandleFunc("/", mainHandler)
     http.HandleFunc("/register", registerPageHandler)
     //http.HandleFunc("/api/register", registerHandler)
-    http.HandleFunc("/profile/details", profileDetailsPageHandler)
     http.HandleFunc("/api/profile/details", profileDetailsHandler)
     http.HandleFunc("/dashboard", dashboardHandler)
     
@@ -29,30 +28,7 @@ func registerPageHandler(w http.ResponseWriter, r *http.Request) {
 
     http.ServeFile(w, r, "./static/css"+r.URL.Path)
 }
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-    log.Printf("Static request: %s", r.URL.Path)
 
-    http.ServeFile(w, r, "./static/css"+r.URL.Path)
-}
-
-
-
-
-// Обработчик страницы дополнительной информации
-func profileDetailsPageHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method != "GET" {
-        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-        return
-    }
-    
-    // В реальном приложении здесь проверка авторизации
-    // if !isAuthenticated(r) {
-    //     http.Redirect(w, r, "/login", http.StatusSeeOther)
-    //     return
-    // }
-    
-    http.ServeFile(w, r, "./templates/profile_details.html")
-}
 
 // Обработчик сохранения дополнительной информации
 func profileDetailsHandler(w http.ResponseWriter, r *http.Request) {

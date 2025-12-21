@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
     "database/sql"
@@ -9,7 +9,7 @@ import (
     "regexp"
     "strings"
     "time"
-    "github.com/DmitriySama/teammate_search/internal/models"
+    "teammate_search/internal/models"
 )
 
 
