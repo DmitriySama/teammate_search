@@ -1,0 +1,27 @@
+serviceName: user_activity_service
+port: 8063
+
+database:
+  host: localhost
+  port: 5432
+  dbname: teammates_data
+  username: postgres
+  password: Win
+
+kafka:
+  brokers:
+    - broker-kafka:9094
+  groupId: user-activity-service
+  maxMessageBytes: 33554432
+
+topics:
+  filterData: filter.data
+  newUserData: new.user.data
+  UpdateUserData: update.user.data
+
+redis:
+  host: redis
+  port: 6379
+  db: 0
+  ttlSeconds: 600
+

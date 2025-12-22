@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль пользователя - TeammatesFind</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --bg-darker: #0a0a0a;
+            --bg-card: #1e1e1e;
+            --bg-hover: #2d2d2d;
+            --primary: #bb86fc;
+            --primary-hover: #9c64e6;
+            --secondary: #03dac6;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border-color: #333333;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Шапка */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            color: var(--primary);
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: var(--transition);
+            border: 1px solid var(--border-color);
+        }
+
+        .back-btn:hover {
+            background-color: var(--bg-hover);
+            transform: translateY(-2px);
+        }
+
+        /* Основной контент профиля */
+        .profile-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .profile-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Левая колонка - аватар и информация */
+        .profile-sidebar {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            height: fit-content;
+            border: 1px solid var(--border-color);
+        }
+
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 25px;
+            position: relative;
+        }
+
+        .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--text-primary);
+            border: 4px solid var(--primary);
+        }
+
+        .avatar-upload {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: var(--primary);
+            color: var(--bg-dark);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid var(--bg-card);
+        }
+
+        .avatar-upload:hover {
+            background-color: var(--primary-hover);
+            transform: scale(1.1);
+        }
+
+        /* Правая колонка - информация профиля */
+        .profile-main {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .profile-title {
+            font-size: 1.8rem;
+            color: var(--text-primary);
+        }
+
+        .edit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 1rem;
+            width: 200px;
+        }
+
+        .edit-btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(187, 134, 252, 0.2);
+        }
+
+        .edit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .save-btn {
+            background-color: var(--secondary);
+        }
+
+        .save-btn:hover {
+            background-color: #00c9b3;
+        }
+
+        .cancel-btn {
+            background-color: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .cancel-btn:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 100px;
+        }
+
+        form {
+            display:block;
+            gap: 12px;
+        }
+        form * {
+            width: 800px;
+        }
+
+        /* Поля формы */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+
+        .form-label span {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: normal;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(187, 134, 252, 0.2);
+        }
+
+        .form-input:disabled {
+            background-color: var(--bg-darker);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        .form-textarea {
+            min-height: 150px;
+            resize: vertical;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+
+        /* Секции профиля */
+        .profile-section {
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .profile-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            font-size: 1.2rem;
+        }
+
+        /* Сообщения */
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .message.success {
+            background-color: rgba(3, 218, 198, 0.1);
+            border: 1px solid var(--secondary);
+            color: var(--secondary);
+            display: block;
+        }
+
+        .message.error {
+            background-color: rgba(255, 68, 68, 0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modern-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            background: white;
+            font-size: 16px;
+            appearance: none;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <a href="/" class="logo">
+                <i class="fas fa-users logo-icon"></i>
+                <div class="logo-text">
+                    <h1>TeammatesFind</h1>
+                </div>
+            </a>
+            <a href="/main/home" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                На главную
+            </a>
+        </header>
+
+        <div class="profile-container">
+            <div class="profile-sidebar">
+                <div class="profile-avatar">
+                    <div class="avatar-placeholder">
+                        {{.Username}}
+                        <div class="form-group">
+                        </div>
+                    </div>
+                    <div class="avatar-upload" title="Сменить аватар">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Правая колонка - информация профиля -->
+            <div class="profile-main">
+                <!-- Заголовок и кнопка редактирования -->
+                <div class="profile-header">
+                    <h2 class="profile-title">Профиль пользователя</h2>
+                    <div class="btn-group">
+                        <button id="editProfileBtn" class="edit-btn">
+                            <i class="fas fa-edit"></i> 
+                            <a href="/profile/update">Редактировать</a>
+                        </button>
+                    </div>
+                </div>
+                <!-- Основная информация -->
+                <h3 class="section-title">
+                    <i class="fas fa-user"></i> Основная информация
+                       
+                </h3>
+                <div class="btn-group">
+                    <div class="profile-section">
+                        <div class="form-group">
+                            <label for="username" class="form-label">
+                                Имя пользователя
+                            </label>
+                            <input type="text" 
+                                id="username" 
+                                class="form-input" 
+                                value={{.Username}} 
+                                maxlength="20"
+                                disabled>
+                        </div>
+    
+                        <div class="form-group">
+                            <label for="age" class="form-label">
+                                Возраст
+                            </label>
+                            <input type="text" 
+                                id="age" 
+                                class="form-input" 
+                                value={{.Age}}
+                                maxlength="3"
+                                disabled>
+                        </div>
+    
+                        <div class="form-group">
+                            <label for="description" class="form-label">
+                                О себе
+                            </label>
+                            <textarea id="description" 
+                                    class="form-input form-textarea" 
+                                    maxlength="500"
+                                    disabled>
+                                    {{.Description}}
+                                </textarea>
+                        </div>
+                        
+                        
+                        <div class="form-group">
+                            <label for="game" class="form-label">
+                                Любимая игра
+                            </label> 
+                            <input type="text" 
+                                id="game" 
+                                class="form-input" 
+                                value={{.MLGame}}
+                                maxlength="50"
+                                disabled>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="genre" class="form-label">
+                                Любимый жанр
+                            </label> 
+                            <input type="text" 
+                                id="genre" 
+                                class="form-input" 
+                                value={{.MLGenre}}
+                                maxlength="50"
+                                disabled>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="language" class="form-label">
+                                Язык общения
+                            </label> 
+                            <input type="text" 
+                                id="language" 
+                                class="form-input" 
+                                value={{.Language}}
+                                maxlength="50"
+                                disabled>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

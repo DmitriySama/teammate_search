@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главное меню</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+                
+        /* Темная тема */
+        :root {
+            --bg-dark: #121212;
+            --bg-darker: #0a0a0a;
+            --bg-card: #1e1e1e;
+            --bg-hover: #2d2d2d;
+            --primary: #bb86fc;
+            --primary-hover: #9c64e6;
+            --secondary: #03dac6;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border-color: #333333;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Контейнер */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .user-name .profile-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        .user-name .profile-link:hover {
+            color: var(--secondary);
+            background-color: rgba(187, 134, 252, 0.1);
+            text-decoration: underline;
+        }
+
+        /* Убираем стандартные стили ссылки при клике */
+        .user-name .profile-link:active {
+            color: var(--primary);
+        }
+
+
+        /* Шапка с логотипом */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+        }
+
+        .logo-text h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+        }
+
+        /* Навигационное меню */
+        .nav-container {
+            background-color: var(--bg-darker);
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-tabs {
+            display: flex;
+            list-style: none;
+            gap: 5px;
+        }
+
+        .nav-tab {
+            flex: 1;
+        }
+
+        .nav-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text-secondary);
+            padding: 20px 10px;
+            border-radius: 8px;
+            transition: var(--transition);
+            background-color: transparent;
+            text-align: center;
+            min-height: 100px;
+        }
+
+        .nav-link:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            background-color: var(--bg-card);
+            color: var(--primary);
+            box-shadow: 0 4px 12px rgba(187, 134, 252, 0.2);
+        }
+
+        .nav-icon {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .nav-text {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--secondary);
+            color: var(--bg-dark);
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        /* Контентная область */
+        .content {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 30px;
+            min-height: 400px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tab-title i {
+            color: var(--primary);
+        }
+
+        .tab-description {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+            max-width: 800px;
+        }
+
+        /* Стили для разных вкладок */
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background-color: var(--bg-darker);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        /* Стили для поиска */
+        .search-container {
+            background-color: var(--bg-darker);
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            width: 70px;
+            height: 20px;
+            padding: 15px;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(187, 134, 252, 0.2);
+        }
+
+        .search-btn {
+            background-color: var(--primary);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            height: 50px;
+            width: 100px;
+        }
+
+        .search-btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .filter-options {
+            display: inline-flex;
+            gap: 60px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .filter-select {
+            padding: 10px;
+            background-color: var(--bg-dark);
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            color: var(--text-primary);
+            width: 130px;
+        }
+
+        /* Футер */
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .nav-link {
+                flex-direction: row;
+                justify-content: flex-start;
+                min-height: auto;
+                padding: 15px;
+                gap: 15px;
+            }
+            
+            .nav-icon {
+                margin-bottom: 0;
+                font-size: 1.5rem;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .search-form {
+                flex-direction: column;
+            }
+        
+        }
+
+        /* Стиль для админки */
+        .admin-alert {
+            background: linear-gradient(135deg, var(--primary), #3700b3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-alert i {
+            font-size: 1.5rem;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .admin-card {
+            background-color: var(--bg-darker);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .admin-card-title {
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-card {
+            display: table;
+            background-color: var(--bg-darker);
+            height: 200px;
+            width: 200px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+        }
+    </style>
+
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-text">
+                    <h1>TeammatesFind</h1>
+                </div>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">
+                </div>
+                <div>
+                    <div class="user-name">
+                        <a href="/profile/look" class="profile-link" data-tab="profile">
+                            {{.MyUsername}}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Навигационное меню -->
+        <nav class="nav-container">
+            <ul class="nav-tabs">
+                <li class="nav-tab">
+                    <a href="/main/home" class="nav-link">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span class="nav-text">Главная</span>
+                    </a>
+                </li>
+                <li class="nav-tab">
+                    <a href="/main/search" class="nav-link active">
+                        <i class="fas fa-search nav-icon"></i>
+                        <span class="nav-text">Поиск по фильтру</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Контентная область -->
+        <main class="content">
+            <!-- Вкладка Поиск -->
+            <div class="tab-content">
+                <h2 class="tab-title"><i class="fas fa-search"></i> Поиск по фильтру</h2>
+                
+                <div class="search-container">
+                    <form class="search-form" method="POST" action="/main/search">
+                        
+                        <div class="filter-options">
+                            <div class="filter-group">
+                                <label for="age0" class="filter-label">Возраст (от)</label>
+                                <input class="search-input" name="age0">
+                            </div>
+                            <div class="filter-group">
+                                <label for="age1" class="filter-label">Возраст (до)</label>
+                                <input class="search-input" name="age1">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label class="filter-label" for="language">Язык общения</label>
+                                <select name="language" id="select_language" class="filter-select">
+                                    {{range .Languages}}
+                                    <option name="language" value="{{.ID}}">{{.Lang}}</option>
+                                    {{end}}
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label class="filter-label" for="game">Любимая игра</label>
+                                <select name="game" id="select_game" class="filter-select">
+                                    {{range .Games}}
+                                    <option name="game" value="{{.ID}}">{{.Game}}</option>
+                                    {{end}}
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label class="filter-label" for="genre">Любимый жанр игр</label>
+                                <select name="genre" id="select_genre" class="filter-select">
+                                    {{range .Genres}}
+                                    <option name="genre" value="{{.ID}}">{{.Genre}}</option>
+                                    {{end}}
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="search-btn">
+                                <i class="fas fa-search"></i> Найти
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+  
+                <!-- Список пользователей -->
+                {{ if .User}}
+                <div class="users-grid" id="usersList">
+                    {{range $index, $user := .User}}
+                    <div class="user-card">
+                        <p>{{$user.Username}}</p>
+                        <p>=======================</p>
+                        <p><span style="color:#bb86fc;">Игра:</span>  {{$user.MostLikeGame}}</p>
+                        <p><span style="color:#bb86fc;">Описание:</span>  {{$user.Description}}</p>
+                    </div>
+                    {{end}}
+                </div>
+                {{end}}
+                
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>
