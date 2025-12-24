@@ -1,25 +1,22 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"context"
 
 	"github.com/DmitriySama/teammate_search/config"
 	"github.com/DmitriySama/teammate_search/internal/bootstrap"
+	//"github.com/DmitriySama/teammate_search/internal/cache"
 )
 
 func main() {
+	cfg, _ := config.LoadConfig()
 
-	cfg, err := config.LoadConfig(os.Getenv("configPath"))
-	if err != nil {
-		panic(fmt.Sprintf("ошибка парсинга конфига, %v", err))
-	}
+	storage:= bootstrap.InitPGStorage(cfg)
+	cache := bootstrap.InitCache(cfg)
+	service := bootstrap.InitTSService(storage, cache)
+	api := bootstrap.InitRegistryAPI(service, cfg.ServiceName, storage)
+	// producers := bootstrap.InitProducers(cfg)
+	// consumers := bootstrap.InitConsumers(cfg, service, producers)
 
-	studentsStorage := bootstrap.InitPGStorage(cfg)
-	studentService := bootstrap.InitStudentService(studentsStorage, cfg)
-	studentsInfoProcessor := bootstrap.InitStudentsInfoProcessor(studentService)
-	studentsinfoupsertconsumer := bootstrap.InitStudentInfoUpsertConsumer(cfg, studentsInfoProcessor)
-	studentsApi := bootstrap.InitStudentServiceAPI(studentService)
-
-	bootstrap.AppRun(*studentsApi, studentsinfoupsertconsumer)
+	bootstrap.AppRun(context.Background(), cfg, api)
 }
