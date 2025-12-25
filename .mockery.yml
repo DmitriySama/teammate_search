@@ -1,0 +1,13 @@
+packages:
+  github.com/DmitriySama/teammate_search/internal/services/teammateSearchService:
+    interfaces:
+      UsersStorage:
+        config:
+          dir: internal/services/registryService/mocks
+          filename: storage.go
+          outpkg: mocks
+      UsersCache:
+        config:
+          dir: internal/services/registryService/mocks
+          filename: cache.go
+          outpkg: mocks

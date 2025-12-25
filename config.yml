@@ -1,5 +1,5 @@
 serviceName: user_activity_service
-port: 8063
+port: 3000
 
 database:
   host: localhost
@@ -20,8 +20,9 @@ topics:
   UpdateUserData: update.user.data
 
 redis:
-  host: redis
+  host: redis 
   port: 6379
+  username: DmitriySama
   db: 0
   ttlSeconds: 600
 

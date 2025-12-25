@@ -11,12 +11,13 @@ import (
 
 )
 
-type DB struct {
-    *sql.DB
+// PGstorage содержит бизнес-логику авторизации
+type PGstorage struct {
+    DB *sql.DB
 }
 
 
-func InitDB() (*sql.DB, error) {
+func InitDB(connString string) (*PGstorage, error) {
     log.Println("Инициализация подключения к БД...")
     
     // 1. Загрузка конфигурации
@@ -32,22 +33,11 @@ func InitDB() (*sql.DB, error) {
     }
     
     log.Printf("✅ Конфиг загружен. База данных: %s", cfg.Database.DBName)
-    
-    // 2. Получение строки подключения
-    connStr := cfg.Database.DatabaseURL()
-    log.Printf("Получена строка подключения: %s", connStr)
-    
-    // 3. Проверка и преобразование формата строки подключения
-    dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-        cfg.Database.Host,
-        cfg.Database.Port,
-        cfg.Database.Username,
-        cfg.Database.Password,
-        cfg.Database.DBName)
+ 
     
     // 4. Подключение к базе данных
     log.Println("Открытие соединения с PostgreSQL...")
-    db, err := sql.Open("postgres", dsn)
+    db, err := sql.Open("postgres", connString)
     if err != nil {
         log.Printf("❌ Ошибка открытия соединения: %v", err)
         return nil, fmt.Errorf("не удалось открыть соединение с БД: %w", err)
@@ -74,16 +64,18 @@ func InitDB() (*sql.DB, error) {
         
         return nil, fmt.Errorf("не удалось подключиться к БД: %w", err)
     }
+
+    storage := &PGstorage{
+        DB: db,
+    }
     
     log.Printf("✅ Успешно подключено к БД: %s@%s:%d/%s", 
         cfg.Database.Username, cfg.Database.Host, cfg.Database.Port, cfg.Database.DBName)
     
-    return db, nil
+    return storage, nil
 }
 
-
-
-func (db *DB) Close() error {
+func (db PGstorage) Close() error {
     log.Println("Закрытие подключения к БД")
     return db.DB.Close()
 }

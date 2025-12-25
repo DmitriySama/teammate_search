@@ -13,10 +13,10 @@ import (
 
 
 // Register регистрирует нового пользователя
-func (aus *AuthService) Register(username, password, description string, age int) (*AuthResult, error) {
+func (pg *PGstorage) Register(username, password, description string, age int) (*AuthResult, error) {
   
     // Проверка уникальности username
-    exists, err := aus.userExists(username)
+    exists, err := pg.UserExists(username)
     if err != nil {
         log.Printf("Ошибка проверки пользователя: %v", err)
         return nil, err
@@ -39,7 +39,7 @@ func (aus *AuthService) Register(username, password, description string, age int
     
     // Сохранение в БД
     var userID int
-    err = aus.DB.QueryRow(`
+    err = pg.DB.QueryRow(`
         INSERT INTO users (username, password, description, age, created_at)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING id`, user.Username, user.Password, user.Description, user.Age, user.CreatedAt).Scan(&userID)
@@ -61,11 +61,11 @@ func (aus *AuthService) Register(username, password, description string, age int
 }
 
 
-// userExists проверяет существование пользователя
-func (aus *AuthService) userExists(username string) (bool, error) {
+// UserExists проверяет существование пользователя
+func (pg *PGstorage) UserExists(username string) (bool, error) {
     
 	var count int
-    err := aus.DB.QueryRow(`
+    err := pg.DB.QueryRow(`
         SELECT COUNT(*) 
         FROM users 
         WHERE username = $1
@@ -75,9 +75,9 @@ func (aus *AuthService) userExists(username string) (bool, error) {
 }
 
 // Login выполняет вход пользователя
-func (aus *AuthService) Login(username, password string) (*AuthResult, error) {    
+func (pg *PGstorage) Login(username, password string) (*AuthResult, error) {    
     
-    user_id, err := aus.findUser(username, password)
+    user_id, err := pg.FindUser(username, password)
     if err != nil {
         if err == sql.ErrNoRows {
             return &AuthResult{
@@ -89,7 +89,7 @@ func (aus *AuthService) Login(username, password string) (*AuthResult, error) {
         return nil, err
     }
     
-    user, err := aus.GetUserByID(user_id)
+    user, err := pg.GetUserByID(user_id)
     if err != nil {
         if err == sql.ErrNoRows {
             return &AuthResult{
@@ -110,53 +110,65 @@ func (aus *AuthService) Login(username, password string) (*AuthResult, error) {
     }, nil
 }
 
-func (aus *AuthService) UpdateUser(r *http.Request, user models.User) (error) {
+func (pg *PGstorage) UpdateUser(r *http.Request, user models.User) (error) {
 
     // Динамически строим запрос
-    var setClauses []string
+    var setClpges []string
     var args []interface{}
     argIndex := 1
     
     age, _ := strconv.Atoi(r.FormValue("age"))
     if age != user.Age {
-        setClauses = append(setClauses, fmt.Sprintf("age = $%d", argIndex))
+        setClpges = append(setClpges, fmt.Sprintf("age = $%d", argIndex))
         args = append(args, age)
         argIndex++
+        log.Println("AGE:", age, user.Age)
     }
-    if r.FormValue("description") != user.Description {
-        setClauses = append(setClauses, fmt.Sprintf("description = $%d", argIndex))
-        args = append(args, r.FormValue("description"))
+    desc := strings.TrimSpace(r.FormValue("description"))
+    if desc != user.Description {
+        setClpges = append(setClpges, fmt.Sprintf("description = $%d", argIndex))
+        args = append(args, desc)
         argIndex++
+        log.Println("description:", r.FormValue("description"), user.Description)
     }
-    MostLikeGame := strings.SplitN(r.FormValue("game"), " ", 2)[0]
+    MostLikeGame := strings.SplitN(r.FormValue("game"), " ", 2)[1]
     if MostLikeGame != user.MostLikeGame {
-        setClauses = append(setClauses, fmt.Sprintf("most_like_game = $%d", argIndex))
-        args = append(args, MostLikeGame)
+        id_game := strings.SplitN(r.FormValue("game"), " ", 2)[0]
+        setClpges = append(setClpges, fmt.Sprintf("most_like_game = $%d", argIndex))
+        args = append(args, id_game)
         argIndex++
+        log.Println("MostLikeGame:", MostLikeGame, user.MostLikeGame)
     }
-    MostLikeGenre := strings.SplitN(r.FormValue("genre"), " ", 2)[0]
+    MostLikeGenre := strings.SplitN(r.FormValue("genre"), " ", 2)[1]
     if MostLikeGenre != user.MostLikeGenre {
-        setClauses = append(setClauses, fmt.Sprintf("most_like_genre = $%d", argIndex))
-        args = append(args, MostLikeGenre)
+        id_genre := strings.SplitN(r.FormValue("genre"), " ", 2)[0]
+        setClpges = append(setClpges, fmt.Sprintf("most_like_genre = $%d", argIndex))
+        args = append(args, id_genre)
         argIndex++
+        log.Println("MostLikeGenre:", MostLikeGenre, user.MostLikeGenre)
     }
-    if r.FormValue("app") != user.App {
-        setClauses = append(setClauses, fmt.Sprintf("speaking_app = $%d", argIndex))
-        args = append(args, r.FormValue("app"))
+    App := strings.SplitN(r.FormValue("app"), " ", 2)[1]
+    if App != user.App {
+        id_app := strings.SplitN(r.FormValue("app"), " ", 2)[0]
+        setClpges = append(setClpges, fmt.Sprintf("speaking_app = $%d", argIndex))
+        args = append(args, id_app)
         argIndex++
+        log.Println("App:", r.FormValue("app"), user.App)
     }
-    Language := strings.SplitN(r.FormValue("language"), " ", 2)[0]
+    Language := strings.SplitN(r.FormValue("language"), " ", 2)[1]
     if Language != user.Language {
-        setClauses = append(setClauses, fmt.Sprintf("language = $%d", argIndex))
-        args = append(args, Language)
+        lang_id := strings.SplitN(r.FormValue("language"), " ", 2)[0]
+        setClpges = append(setClpges, fmt.Sprintf("language = $%d", argIndex))
+        args = append(args, lang_id)
         argIndex++
+        log.Println("Language:", Language, user.Language)
     }
     
     // Если ничего не изменилось
-    log.Println(len(setClauses))
-    log.Println(setClauses)
+    log.Println(len(setClpges))
+    log.Println(setClpges)
     log.Println(args)
-    if len(setClauses) == 0 {
+    if len(setClpges) == 0 {
         log.Println("Ничего не изменилось")
         return nil
     }
@@ -165,10 +177,10 @@ func (aus *AuthService) UpdateUser(r *http.Request, user models.User) (error) {
     args = append(args, user.ID)
     query := fmt.Sprintf(
         "UPDATE users SET %s WHERE id = $%d",
-        strings.Join(setClauses, ", "),
+        strings.Join(setClpges, ", "),
         argIndex,
     )
 
-    _, err := aus.DB.Exec(query, args...)
+    _, err := pg.DB.Exec(query, args...)
     return err
 }

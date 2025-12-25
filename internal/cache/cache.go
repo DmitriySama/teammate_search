@@ -6,166 +6,193 @@ import (
 	"fmt"
 	"log"
 	"time"
-	"github.com/redis/go-redis/v9"
 	"github.com/DmitriySama/teammate_search/internal/models"
+	"github.com/redis/go-redis/v9"
 )
 
-type UsersCache struct {
+type Cache struct {
 	client *redis.Client
 	ttl    time.Duration
 }
 
+type LanguagesCache struct {
+	Languages []models.Language `json:"languages"`
+}
 
-func NewUsersCache(client *redis.Client, ttlSeconds int) *UsersCache {
-	return &UsersCache{client: client, ttl: time.Duration(ttlSeconds) * time.Second}
+type GamesCache struct {
+	Games     []models.Games `json:"games"`
+}
+
+type GenresCache struct {
+	Genres    []models.Genres `json:"genres"`
 }
 
 
-func (c *UsersCache) key(orderID, groupID string) string {
-	return fmt.Sprintf("UsersCaches:%s:%s", orderID, groupID)
+func NewCache(client *redis.Client, ttlSeconds int) *Cache {
+	return &Cache{client: client, ttl:time.Duration(ttlSeconds) * time.Second,}
+}		
+
+func (c *Cache) Key(prefix, id string) string {
+	return fmt.Sprintf("%s:%s", prefix, id)
 }
 
-func (c *UsersCache) Get(ctx context.Context, orderID, groupID string) ([]models.User, string, bool) {
+
+func (c *Cache) GetLanguages(ctx context.Context) ([]models.Language, bool) {
 	if c == nil || c.client == nil {
-		return nil, "", false
+		return nil, false
 	}
 
-	cacheKey := c.key(orderID, groupID)
-	log.Printf("Redis: попытка получить данные из кэша для ключа %s", cacheKey)
-	data, err := c.client.Get(ctx, cacheKey).Bytes()
-	if err != nil {
-		if err == redis.Nil {
-			log.Printf("Redis: данные не найдены в кэше для ключа %s", cacheKey)
-		} else {
-			log.Printf("Redis: ошибка получения данных из кэша для ключа %s: %v", cacheKey, err)
-		}
-		return nil, "", false
-	}
-
-	var cached cachedUsersCaches
-	if err := json.Unmarshal(data, &cached); err != nil {
-		log.Printf("Redis: ошибка десериализации данных из кэша для ключа %s: %v", cacheKey, err)
-		return nil, "", false
-	}
-
-	log.Printf("Redis: успешно получены данные из кэша для ключа %s (приказ %s, группа %s)", cacheKey, orderID, groupID)
-	return cached.UsersCaches, cached.GroupName, true
-}
-
-func (c *UsersCache) Set(ctx context.Context, orderID, groupID, groupName string, UsersCaches []models.User) {
-	if c == nil || c.client == nil {
-		log.Printf("Redis: кэш не инициализирован, пропуск сохранения данных")
-		return
-	}
-
-	cacheKey := c.key(orderID, groupID)
-	log.Printf("Redis: попытка сохранить данные в кэше для ключа %s (приказ %s, группа %s, TTL: %v)", cacheKey, orderID, groupID, c.ttl)
-	value, err := json.Marshal(cachedUsersCaches{GroupName: groupName, UsersCaches: UsersCaches})
-	if err != nil {
-		log.Printf("Redis: ошибка сериализации данных для ключа %s: %v", cacheKey, err)
-		return
-	}
-
-	if err := c.client.Set(ctx, cacheKey, value, c.ttl).Err(); err != nil {
-		log.Printf("Redis: ошибка сохранения данных в кэше для ключа %s: %v", cacheKey, err)
-	} else {
-		log.Printf("Redis: успешно сохранены данные в кэше для ключа %s", cacheKey)
-	}
-}
-
-func (c *UsersCache) InvalidateGroup(ctx context.Context, orderID, groupID string) {
-	if c == nil || c.client == nil {
-		log.Printf("Redis: кэш не инициализирован, пропуск инвалидации группы")
-		return
-	}
-	cacheKey := c.key(orderID, groupID)
-	log.Printf("Redis: инвалидация кэша для группы (ключ: %s, приказ: %s, группа: %s)", cacheKey, orderID, groupID)
-	if err := c.client.Del(ctx, cacheKey).Err(); err != nil {
-		log.Printf("Redis: ошибка инвалидации кэша для ключа %s: %v", cacheKey, err)
-	} else {
-		log.Printf("Redis: успешно инвалидирован кэш для ключа %s", cacheKey)
-	}
-}
-
-func (c *UsersCache) InvalidateOrder(ctx context.Context, orderID string) {
-	if c == nil || c.client == nil {
-		log.Printf("Redis: кэш не инициализирован, пропуск инвалидации приказа")
-		return
-	}
-
-	pattern := fmt.Sprintf("UsersCaches:%s:*", orderID)
-	log.Printf("Redis: инвалидация кэша для приказа %s (паттерн: %s)", orderID, pattern)
-	iter := c.client.Scan(ctx, 0, pattern, 0).Iterator()
-	deletedCount := 0
-	for iter.Next(ctx) {
-		key := iter.Val()
-		if err := c.client.Del(ctx, key).Err(); err != nil {
-			log.Printf("Redis: ошибка удаления ключа %s: %v", key, err)
-		} else {
-			deletedCount++
-		}
-	}
-	if err := iter.Err(); err != nil {
-		log.Printf("Redis: ошибка при сканировании ключей для приказа %s: %v", orderID, err)
-	} else {
-		log.Printf("Redis: успешно инвалидирован кэш для приказа %s (удалено ключей: %d)", orderID, deletedCount)
-	}
-}
-
-// Обновляет статус определенной задачи в кэше без инвалидации всего кэша
-func (c *UsersCache) UpdateUsersCacheInCache(ctx context.Context, orderID, groupID string, UsersCacheID int64, status string) {
-	if c == nil || c.client == nil {
-		log.Printf("Redis: кэш не инициализирован, пропуск обновления задачи в кэше")
-		return
-	}
-
-	cacheKey := c.key(orderID, groupID)
-	log.Printf("Redis: попытка обновить задачу %d в кэше для ключа %s", UsersCacheID, cacheKey)
+	cacheKey := c.Key("languages", "all")
+	log.Printf("Redis: попытка получить языки из кэша для ключа %s", cacheKey)
 
 	data, err := c.client.Get(ctx, cacheKey).Bytes()
 	if err != nil {
 		if err == redis.Nil {
-			log.Printf("Redis: кэш для ключа %s не найден, пропуск обновления задачи", cacheKey)
+			log.Printf("Redis: языки не найдены в кэше для ключа %s", cacheKey)
 		} else {
-			log.Printf("Redis: ошибка получения данных из кэша для ключа %s: %v", cacheKey, err)
+			log.Printf("Redis: ошибка получения языков из кэша для ключа %s: %v", cacheKey, err)
 		}
-		return
+		return nil, false
 	}
 
-	var cached cachedUsersCaches
+	var cached LanguagesCache
 	if err := json.Unmarshal(data, &cached); err != nil {
-		log.Printf("Redis: ошибка десериализации данных из кэша для ключа %s: %v", cacheKey, err)
+		log.Printf("Redis: ошибка десериализации языков из кэша для ключа %s: %v", cacheKey, err)
+		return nil, false
+	}
+
+	log.Printf("Redis: успешно получены языки из кэша для ключа %s", cacheKey)
+	return cached.Languages, true
+}
+
+
+func (c *Cache) SetLanguages(ctx context.Context, languages []models.Language) {
+	if c == nil || c.client == nil {
+		log.Printf("Redis: кэш не инициализирован, пропуск сохранения языков")
 		return
 	}
 
-	found := false
-	for i := range cached.UsersCaches {
-		if cached.UsersCaches[i].ID == UsersCacheID {
-			cached.UsersCaches[i].Status = status
-			found = true
-			break
-		}
-	}
+	cacheKey := c.Key("languages", "all")
+	log.Printf("Redis: попытка сохранить языки в кэше для ключа %s (TTL: %v)", cacheKey, c.ttl)
 
-	if !found {
-		log.Printf("Redis: задача %d не найдена в кэше для ключа %s", UsersCacheID, cacheKey)
-		return
-	}
-
-	value, err := json.Marshal(cached)
+	value, err := json.Marshal(LanguagesCache{
+		Languages: languages,
+	})
 	if err != nil {
-		log.Printf("Redis: ошибка сериализации данных для ключа %s: %v", cacheKey, err)
+		log.Printf("Redis: ошибка сериализации языков для ключа %s: %v", cacheKey, err)
 		return
 	}
 
 	if err := c.client.Set(ctx, cacheKey, value, c.ttl).Err(); err != nil {
-		log.Printf("Redis: ошибка обновления данных в кэше для ключа %s: %v", cacheKey, err)
+		log.Printf("Redis: ошибка сохранения языков в кэше для ключа %s: %v", cacheKey, err)
 	} else {
-		log.Printf("Redis: успешно обновлена задача %d в кэше для ключа %s", UsersCacheID, cacheKey)
+		log.Printf("Redis: успешно сохранены языки в кэше для ключа %s", cacheKey)
 	}
 }
 
-type cachedUsersCaches struct {
-	GroupName string        `json:"group_name"`
-	UsersCaches     []models.User `json:"UsersCaches"`
+
+func (c *Cache) GetGames(ctx context.Context) ([]models.Games, bool) {
+	if c == nil || c.client == nil {
+		return nil, false
+	}
+
+	cacheKey := c.Key("games", "all")
+	log.Printf("Redis: попытка получить игры из кэша для ключа %s", cacheKey)
+
+	data, err := c.client.Get(ctx, cacheKey).Bytes()
+	if err != nil {
+		if err == redis.Nil {
+			log.Printf("Redis: игры не найдены в кэше для ключа %s", cacheKey)
+		} else {
+			log.Printf("Redis: ошибка получения игр из кэша для ключа %s: %v", cacheKey, err)
+		}
+		return nil, false
+	}
+
+	var cached GamesCache
+	if err := json.Unmarshal(data, &cached); err != nil {
+		log.Printf("Redis: ошибка десериализации игр из кэша для ключа %s: %v", cacheKey, err)
+		return nil, false
+	}
+
+	log.Printf("Redis: успешно получены игры из кэша для ключа %s", cacheKey)
+	return cached.Games, true
+}
+
+
+func (c *Cache) SetGames(ctx context.Context, games []models.Games) {
+	if c == nil || c.client == nil {
+		log.Printf("Redis: кэш не инициализирован, пропуск сохранения игр")
+		return
+	}
+
+	cacheKey := c.Key("games", "all")
+	log.Printf("Redis: попытка сохранить игры в кэше для ключа %s (TTL: %v)", cacheKey, c.ttl)
+
+	value, err := json.Marshal(GamesCache{
+		Games:     games,
+	})
+	if err != nil {
+		log.Printf("Redis: ошибка сериализации игр для ключа %s: %v", cacheKey, err)
+		return
+	}
+
+	if err := c.client.Set(ctx, cacheKey, value, c.ttl).Err(); err != nil {
+		log.Printf("Redis: ошибка сохранения игр в кэше для ключа %s: %v", cacheKey, err)
+	} else {
+		log.Printf("Redis: успешно сохранены игры в кэше для ключа %s", cacheKey)
+	}
+}
+
+
+func (c *Cache) GetGenres(ctx context.Context) ([]models.Genres, bool) {
+	if c == nil || c.client == nil {
+		return nil, false
+	}
+
+	cacheKey := c.Key("game_genres", "all")
+	log.Printf("Redis: попытка получить жанры игр из кэша для ключа %s", cacheKey)
+
+	data, err := c.client.Get(ctx, cacheKey).Bytes()
+	if err != nil {
+		if err == redis.Nil {
+			log.Printf("Redis: жанры игр не найдены в кэше для ключа %s", cacheKey)
+		} else {
+			log.Printf("Redis: ошибка получения жанров игр из кэша для ключа %s: %v", cacheKey, err)
+		}
+		return nil, false
+	}
+
+	var cached GenresCache
+	if err := json.Unmarshal(data, &cached); err != nil {
+		log.Printf("Redis: ошибка десериализации жанров игр из кэша для ключа %s: %v", cacheKey, err)
+		return nil, false
+	}
+
+	log.Printf("Redis: успешно получены жанры игр из кэша для ключа %s", cacheKey)
+	return cached.Genres, true
+}
+
+func (c *Cache) SetGenres(ctx context.Context, genres []models.Genres) {
+	if c == nil || c.client == nil {
+		log.Printf("Redis: кэш не инициализирован, пропуск сохранения жанров игр")
+		return
+	}
+
+	cacheKey := c.Key("game_genres", "all")
+	log.Printf("Redis: попытка сохранить жанры игр в кэше для ключа %s (TTL: %v)", cacheKey, c.ttl)
+
+	value, err := json.Marshal(GenresCache{
+		Genres:    genres,
+	})
+	if err != nil {
+		log.Printf("Redis: ошибка сериализации жанров игр для ключа %s: %v", cacheKey, err)
+		return
+	}
+
+	if err := c.client.Set(ctx, cacheKey, value, c.ttl).Err(); err != nil {
+		log.Printf("Redis: ошибка сохранения жанров игр в кэше для ключа %s: %v", cacheKey, err)
+	} else {
+		log.Printf("Redis: успешно сохранены жанры игр в кэше для ключа %s", cacheKey)
+	}
 }

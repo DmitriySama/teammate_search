@@ -12,11 +12,10 @@ import (
 )
 
 
-// findUserByUsernameOrEmail ищет пользователя по имени или email
-func (aus *AuthService) findUser(username, password string) (int, error) {
+func (pg *PGstorage) FindUser(username, password string) (int, error) {
     log.Println(username, password)
     var id int
-    err := aus.DB.QueryRow(`
+    err := pg.DB.QueryRow(`
         SELECT id
         FROM users 
         WHERE username = $1 and password = $2
@@ -26,10 +25,10 @@ func (aus *AuthService) findUser(username, password string) (int, error) {
 }
 
 
-func (aus *AuthService) GetLanguages(ctx context.Context) ([]models.Language, error) {
+func (pg *PGstorage) GetLanguages(ctx context.Context) ([]models.Language, error) {
     query := `SELECT id_language, language FROM languages`
     
-    rows, err := aus.DB.QueryContext(ctx, query)
+    rows, err := pg.DB.QueryContext(ctx, query)
     if err != nil {
         return nil, err
     }
@@ -47,10 +46,10 @@ func (aus *AuthService) GetLanguages(ctx context.Context) ([]models.Language, er
     return languages, nil
 }
 
-func (aus *AuthService) GetGenres(ctx context.Context) ([]models.Genres, error) {
+func (pg *PGstorage) GetGenres(ctx context.Context) ([]models.Genres, error) {
     query := `SELECT id_genre, genre FROM genres`
     
-    rows, err := aus.DB.QueryContext(ctx, query)
+    rows, err := pg.DB.QueryContext(ctx, query)
     if err != nil {
         return nil, err
     }
@@ -68,10 +67,10 @@ func (aus *AuthService) GetGenres(ctx context.Context) ([]models.Genres, error) 
     return genres, nil
 }
 
-func (aus *AuthService) GetGames(ctx context.Context) ([]models.Games, error) {
+func (pg *PGstorage) GetGames(ctx context.Context) ([]models.Games, error) {
     query := `SELECT id_game, game FROM games`
     
-    rows, err := aus.DB.QueryContext(ctx, query)
+    rows, err := pg.DB.QueryContext(ctx, query)
     if err != nil {
         return nil, err
     }
@@ -89,12 +88,33 @@ func (aus *AuthService) GetGames(ctx context.Context) ([]models.Games, error) {
     return games, nil
 }
 
-func (aus *AuthService) GetUserByID(userID int) (*models.User, error) {
+func (pg *PGstorage) GetApps(ctx context.Context) ([]models.Apps, error) {
+    query := `SELECT id_app, app FROM apps`
+    
+    rows, err := pg.DB.QueryContext(ctx, query)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+    
+    var apps []models.Apps
+    for rows.Next() {
+        var app models.Apps
+        if err := rows.Scan(&app.ID, &app.App); err != nil {
+            return nil, err
+        }
+        apps = append(apps, app)
+    }
+    
+    return apps, nil
+}
+
+func (pg *PGstorage) GetUserByID(userID int) (*models.User, error) {
     var username, password, f_game, f_genre, app, description, lang string
     var id, age int 
     var created_at time.Time 
 
-    err := aus.DB.QueryRow(`
+    err := pg.DB.QueryRow(`
         SELECT 
             u.id, 
             u.username, 
@@ -138,9 +158,9 @@ func (aus *AuthService) GetUserByID(userID int) (*models.User, error) {
     return user, nil
 }
 
-func (aus *AuthService) GetUserCount() (int, error) {
+func (pg *PGstorage) GetUserCount() (int, error) {
     var value int
-    err := aus.DB.QueryRow(`SELECT count(*) from users`).Scan(&value)
+    err := pg.DB.QueryRow(`SELECT count(*) from users`).Scan(&value)
     if err != nil {
         return 0, err
     }
@@ -148,7 +168,7 @@ func (aus *AuthService) GetUserCount() (int, error) {
     return value, err
 }
 
-func (aus *AuthService) GetUsers(r *http.Request) (*sql.Rows, error) {
+func (pg *PGstorage) GetUsers(r *http.Request) (*sql.Rows, error) {
     
     query := `SELECT 
             u.username, 
@@ -175,7 +195,7 @@ func (aus *AuthService) GetUsers(r *http.Request) (*sql.Rows, error) {
         query += ` and u.language = ` + r.FormValue("language")
     }
     log.Println(query)
-    rows, err := aus.DB.Query(query, r.FormValue("age0"), r.FormValue("age1"))
+    rows, err := pg.DB.Query(query, r.FormValue("age0"), r.FormValue("age1"))
     if err != nil {
         log.Fatal("Ошибка при выполнении запроса: ", err.Error())
         return nil, err

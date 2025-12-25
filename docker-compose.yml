@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  teamate-search-service:
+    build: .
+    container_name: teamate-search-service
+    depends_on:
+      redis:
+        condition: service_started
+    ports:
+      - "8063:8063"
+    environment:
+      SERVICE_NAME: ${TASK_REGISTRY_SERVICE_NAME:-teamate-search}
+      PORT: ${TASK_REGISTRY_PORT:-8063}
+      DATABASE_HOST: teamate-search-db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${TASKS_DB_NAME:-teammate_data}
+      DATABASE_USER: ${TASKS_DB_USER:-postgres}
+      DATABASE_PASSWORD: ${TASKS_DB_PASSWORD:-Win}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_TTL_SECONDS: ${REDIS_TTL_SECONDS:-600}
+
+  redis:
+    image: redis:7-alpine
+    container_name: teamate-search-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+
+  redis-ui:
+    image: rediscommander/redis-commander:latest
+    container_name: teamate-search-redis-ui
+    depends_on:
+      redis:
+        condition: service_started
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+      - HTTP_USER=admin
+      - HTTP_PASSWORD=

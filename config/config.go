@@ -77,6 +77,7 @@ type TopicsConfig struct {
 type RedisConfig struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
+	Username string    `yaml:"username"`
 	DB   int    `yaml:"db"`
 	TTL  int    `yaml:"ttlSeconds"`
 }

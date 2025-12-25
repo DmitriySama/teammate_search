@@ -65,3 +65,8 @@ type Games struct {
 	Game		string 	  `json:"game"`
 }
 
+type Apps struct {
+    ID          int       `json:"id_app"`
+	App		string 	  `json:"app"`
+}
+

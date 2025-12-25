@@ -479,6 +479,19 @@
                                     </select>
                                 </div>
                             </div>
+                            
+                            <div class="form-group">
+                                <div class="select-wrapper">
+                                    <label for="app" class="form-label">
+                                    Приложение для общения
+                                    </label> 
+                                    <select name="app" id="select_app" class="modern-select">
+                                        {{range .Apps}}
+                                        <option name="app" value="{{.ID}} {{.App}}">{{.App}}</option>
+                                        {{end}}
+                                    </select>
+                                </div>
+                            </div>
                         
                             <button type="submit" id="saveProfileBtn" class="edit-btn save-btn">
                                 <i class="fas fa-save"></i> Сохранить

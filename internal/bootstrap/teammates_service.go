@@ -6,6 +6,6 @@ import (
 	"github.com/DmitriySama/teammate_search/internal/storage/pgstorage"
 )
 
-func InitTSService(storage *pgstorage.Storage, cache *cache.UsersCache) *tsService.Service {
+func InitTSService(storage *pgstorage.PGstorage, cache *cache.Cache) *tsService.Service {
 	return tsService.New(storage, cache)
 }
