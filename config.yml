@@ -11,18 +11,16 @@ database:
 kafka:
   brokers:
     - broker-kafka:9094
-  groupId: user-activity-service
+  groupId: teammate-search
   maxMessageBytes: 33554432
 
 topics:
   filterData: filter.data
-  newUserData: new.user.data
-  UpdateUserData: update.user.data
+  userPopularity: user.popularity
 
 redis:
-  host: redis 
+  host: localhost 
   port: 6379
-  username: DmitriySama
   db: 0
   ttlSeconds: 600
 

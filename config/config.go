@@ -70,7 +70,7 @@ type KafkaConfig struct {
 
 type TopicsConfig struct {
 	FilterData        string `yaml:"filterData"`
-	NewUserData        string `yaml:"newUserData"`
+	UserPopylarity        string `yaml:"userPopylarity"`
 	UpdateUserData        string `yaml:"UpdateUserData"`
 }
 

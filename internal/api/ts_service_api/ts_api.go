@@ -41,7 +41,7 @@ func (a *API) Router() http.Handler {
 
 	router.Get("/health", a.health)
 	router.Get("/swagger", a.swaggerUI)
-	router.Get("/swagger/registry.swagger.json", a.swaggerSpecHandler)
+	router.Get("/swagger/web.swagger.json", a.swaggerSpecHandler)
 	
 	router.Get("/register", a.RegisterPage)
 	router.Post("/register", a.RegisterHandler)
@@ -57,7 +57,22 @@ func (a *API) Router() http.Handler {
 	
 	router.Get("/main/search", a.MainSearchHandler)
 	router.Post("/main/search", a.MainSearchHandler)
+	router.Post("/main/select-user", a.SelectUser)
 	return router
+}
+
+type SelectUser struct {
+    Username    string `json:"username"`
+}
+
+func (a *API) SelectUser(w http.ResponseWriter, r *http.Request) {    
+    
+    var req SelectUser
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusBadRequest)
+    }
+    a.pg.SelectUser(req.Username)
 }
 
 
@@ -95,7 +110,7 @@ func getFrontendPath() string {
     if err != nil {
         panic(err)
     }
-    
+
     exeDir := filepath.Dir(exePath)
     
     // Поднимаемся на 2 уровня вверх: app/ -> cmd/ -> X/
@@ -106,7 +121,6 @@ func getFrontendPath() string {
 }
 
 func (a *API) LoginHandler(w http.ResponseWriter, r *http.Request) {
-    log.Println("Зашел")
     if err := r.ParseForm(); err != nil {
 		log.Println("Ошибка при разборе формы")
 	} else {
@@ -146,8 +160,21 @@ func (a *API) MainSearchHandler(w http.ResponseWriter, r *http.Request) {
         if err := r.ParseForm(); err != nil {
             log.Println("Ошибка при разборе формы")
         } else {
+            // Отправление данных фильтров через KAFKA
+            age, _ := strconv.Atoi(r.FormValue("age"))
+            fd := models.FilterData{
+                Age: age,
+                Game: r.FormValue("game"),
+                Genre: r.FormValue("genre"),
+                Language: r.FormValue("language"),
+                App: r.FormValue("app"),
+            }
+            a.pg.FilterData(fd)
+
+            // Получение пользователей
             users, _ := a.pg.GetUsers(r)
             users_v2 := []models.UserListShow{}
+            
             for users.Next() {
                 var username, description, game, genre, language, app string
                 var age int
@@ -164,11 +191,13 @@ func (a *API) MainSearchHandler(w http.ResponseWriter, r *http.Request) {
                     Language: language,
                 })
             }
-            log.Println("users_v2", users_v2)
+
             data := map[string]interface{}{
                 "MyUsername": a.user.Username,
                 "User": users_v2,
             }
+
+            // Отрисовка пользователей
 			template.Must(template.ParseFiles(getFrontendPath()+"/main_search.html")).Execute(w, data)
         }
     }
@@ -197,18 +226,21 @@ func (a *API) GetDataToShow(r *http.Request, choise string) (map[string]interfac
             }
         }   
         case "search": {
-            languages, _ := a.pg.GetLanguages(r.Context())
+            languages, _ := a.service.GetLanguages(r.Context())
             languages = append([]models.Language{{ID: -1, Lang: "Любой"}}, languages...)
-            games, _ := a.pg.GetGames(r.Context())
+            games, _ := a.service.GetGames(r.Context())
             games = append([]models.Games{{ID: -1, Game: "Любая"}}, games...)
-            genres, _ := a.pg.GetGenres(r.Context())
+            genres, _ := a.service.GetGenres(r.Context())
             genres = append([]models.Genres{{ID: -1, Genre: "Любой"}}, genres...)
+            apps, _ := a.service.GetApps(r.Context())
+            apps = append([]models.Apps{{ID: -1, App: "Любой"}}, apps...)
 
             data = map[string]interface{}{
                 "MyUsername": a.user.Username,
                 "Languages": languages,
                 "Games": games,
                 "Genres": genres,
+                "Apps": apps,
             }
         }
         case "GetProfile": {
@@ -312,7 +344,7 @@ func (a *API) swaggerUI(w http.ResponseWriter, _ *http.Request) {
 		<script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
 		<script>
 			window.onload = () => {
-			SwaggerUIBundle({ url: '/swagger/registry.swagger.json', dom_id: '#swagger-ui' });
+			SwaggerUIBundle({ url: '/swagger/web.swagger.json', dom_id: '#swagger-ui' });
 			};
 		</script>
 		</body>
@@ -321,7 +353,7 @@ func (a *API) swaggerUI(w http.ResponseWriter, _ *http.Request) {
 
 func (a *API) swaggerSpecHandler(w http.ResponseWriter, _ *http.Request) {
 	a.once.Do(func() {
-		a.swaggerSpec = swagger.Registry()
+		a.swaggerSpec = swagger.Teammate_search()
 	})
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -332,8 +364,4 @@ func writeJSON(w http.ResponseWriter, status int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(payload)
-}
-
-func writeJSONError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, map[string]string{"detail": message})
 }

@@ -13,7 +13,6 @@ import (
 
 
 func (pg *PGstorage) FindUser(username, password string) (int, error) {
-    log.Println(username, password)
     var id int
     err := pg.DB.QueryRow(`
         SELECT id
@@ -194,7 +193,6 @@ func (pg *PGstorage) GetUsers(r *http.Request) (*sql.Rows, error) {
     if r.FormValue("language") != "-1" {
         query += ` and u.language = ` + r.FormValue("language")
     }
-    log.Println(query)
     rows, err := pg.DB.Query(query, r.FormValue("age0"), r.FormValue("age1"))
     if err != nil {
         log.Fatal("Ошибка при выполнении запроса: ", err.Error())

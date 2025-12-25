@@ -16,7 +16,6 @@ func InitCache(cfg *config.Config) *cache.Cache {
 	
 	client := redis.NewClient(&redis.Options{
 		Addr: redisAddr,
-		Password: "",
 		DB:   0,
 	})
 

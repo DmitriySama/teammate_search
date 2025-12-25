@@ -45,8 +45,8 @@ type FilterData struct {
 }
 
 type UpdateUserData struct {
-	UserUpdateOld UserUpdate
-	UserUpdateNew UserUpdate
+	UserDataOld UserUpdate
+	UserDataNew UserUpdate
 }
 
 

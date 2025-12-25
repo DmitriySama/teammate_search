@@ -403,6 +403,24 @@
             justify-content: space-between;
             align-items: center;
         }
+
+        .user-card {
+            cursor: pointer;           /* рука при наведении */
+            transition: all 0.3s ease; /* плавная анимация */
+            border: 2px solid transparent;
+        }
+
+        .user-card:hover {
+            background-color: #f0f0f0; /* подсветка при наведении */
+            border-color: #bb86fc;
+            transform: translateY(-2px); /* лёгкий подъём */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .user-card:active {
+            transform: translateY(0);  /* нажатие */
+        }
+
         .user-card {
             display: table;
             background-color: var(--bg-darker);
@@ -499,6 +517,15 @@
                                 </select>
                             </div>
                             
+                            <div class="filter-group">
+                                <label class="filter-label" for="app">Любимое приложение</label>
+                                <select name="app" id="select_app" class="filter-select">
+                                    {{range .Apps}}
+                                    <option name="app" value="{{.ID}}">{{.App}}</option>
+                                    {{end}}
+                                </select>
+                            </div>
+                            
                             <button type="submit" class="search-btn">
                                 <i class="fas fa-search"></i> Найти
                             </button>
@@ -511,19 +538,43 @@
                 {{ if .User}}
                 <div class="users-grid" id="usersList">
                     {{range $index, $user := .User}}
-                    <div class="user-card">
-                        <p>{{$user.Username}}</p>
+                    <div class="user-card" data-username="{{$user.Username}}" onclick="selectUser('{{$user.Username}}')">
+                        <p><strong>{{$user.Username}}</strong></p>
                         <p>=======================</p>
-                        <p><span style="color:#bb86fc;">Игра:</span>  {{$user.MostLikeGame}}</p>
-                        <p><span style="color:#bb86fc;">Описание:</span>  {{$user.Description}}</p>
+                        <p><span style="color:#bb86fc;">Игра:</span> {{$user.MostLikeGame}}</p>
+                        <p><span style="color:#bb86fc;">Описание:</span> {{$user.Description}}</p>
                     </div>
                     {{end}}
                 </div>
                 {{end}}
+
                 
             </div>
         </main>
     </div>
-
+    <script>
+        function selectUser(username) {
+            console.log('Выбран пользователь:', username); 
+            fetch('/main/select-user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Ответ сервера:', data);
+                showUserProfile(username);
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+        }
+        
+        function showUserProfile(username) {
+            alert(`Переход к профилю: ${username}`);
+        }
+        </script>
 </body>
 </html>

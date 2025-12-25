@@ -1,16 +1,17 @@
 package pgstorage
 
 import (
-	"log"
-	"strings"
-	"strconv"
-	"time"
+	"context"
 	"database/sql"
-	"net/http"
 	"fmt"
+	"log"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/DmitriySama/teammate_search/internal/models"
 )
-
 
 // Register регистрирует нового пользователя
 func (pg *PGstorage) Register(username, password, description string, age int) (*AuthResult, error) {
@@ -60,7 +61,6 @@ func (pg *PGstorage) Register(username, password, description string, age int) (
     }, nil
 }
 
-
 // UserExists проверяет существование пользователя
 func (pg *PGstorage) UserExists(username string) (bool, error) {
     
@@ -74,7 +74,16 @@ func (pg *PGstorage) UserExists(username string) (bool, error) {
     return count > 0, err
 }
 
-// Login выполняет вход пользователя
+
+func (pg *PGstorage) SelectUser(username string) {
+    pg.producer.SendUserPopularityData(context.Background(), username)
+}   
+
+func (pg *PGstorage) FilterData(fd models.FilterData) {
+    pg.producer.SendFilterData(context.Background(), fd)
+}   
+
+
 func (pg *PGstorage) Login(username, password string) (*AuthResult, error) {    
     
     user_id, err := pg.FindUser(username, password)

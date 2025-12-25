@@ -1,23 +1,25 @@
 package pgstorage
 
 import (
-    "context"
-    "database/sql"
-    "fmt"
-    "log"
-    "time"
-    "github.com/DmitriySama/teammate_search/config"
-    _ "github.com/lib/pq"
+	"context"
+	"database/sql"
+	"fmt"
+	"log"
+	"time"
 
+	"github.com/DmitriySama/teammate_search/config"
+	"github.com/DmitriySama/teammate_search/internal/producer"
+	_ "github.com/lib/pq"
 )
 
 // PGstorage содержит бизнес-логику авторизации
 type PGstorage struct {
     DB *sql.DB
+    producer *producer.Manager
 }
 
 
-func InitDB(connString string) (*PGstorage, error) {
+func InitDB(connString string, producer *producer.Manager) (*PGstorage, error) {
     log.Println("Инициализация подключения к БД...")
     
     // 1. Загрузка конфигурации
@@ -67,6 +69,7 @@ func InitDB(connString string) (*PGstorage, error) {
 
     storage := &PGstorage{
         DB: db,
+        producer: producer,
     }
     
     log.Printf("✅ Успешно подключено к БД: %s@%s:%d/%s", 

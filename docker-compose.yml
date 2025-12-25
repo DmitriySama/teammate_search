@@ -1,37 +1,82 @@
 version: "3.9"
 
 services:
-  teamate-search-service:
+  teammate-db:
+    image: postgres:18-alpine
+    container_name: teammate-db
+    environment:
+      POSTGRES_DB: ${TEAMMATE_DB_NAME:-teammate_search}
+      POSTGRES_USER: ${TEAMMATE_DB_USER:-teammate_search}
+      POSTGRES_PASSWORD: ${TEAMMATE_DB_PASSWORD:-teammate_search}
+    volumes:
+      - teammate-db-data:/var/lib/postgresql/data
+
+  teammate-search-service:
     build: .
-    container_name: teamate-search-service
+    container_name: teammate-search-service
     depends_on:
+      broker-kafka:
+        condition: service_healthy
+      teammate-db:
+        condition: service_started
       redis:
         condition: service_started
     ports:
       - "8063:8063"
     environment:
-      SERVICE_NAME: ${TASK_REGISTRY_SERVICE_NAME:-teamate-search}
-      PORT: ${TASK_REGISTRY_PORT:-8063}
-      DATABASE_HOST: teamate-search-db
+      SERVICE_NAME: ${TEAMMATE_SEARCH_SERVICE_NAME:-teammate-search}
+      PORT: ${TEAMMATE_SEARCH_PORT:-8063}
+      DATABASE_HOST: teammate-search-db
       DATABASE_PORT: 5432
-      DATABASE_NAME: ${TASKS_DB_NAME:-teammate_data}
-      DATABASE_USER: ${TASKS_DB_USER:-postgres}
-      DATABASE_PASSWORD: ${TASKS_DB_PASSWORD:-Win}
+      DATABASE_NAME: ${TEAMMATE_SEARCH_DB_NAME:-teammates_data}
+      DATABASE_USER: ${TEAMMATE_SEARCH_DB_USER:-postgres}
+      DATABASE_PASSWORD: ${TEAMMATE_SEARCH_DB_PASSWORD:-Win}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-broker-kafka:9094}
+      KAFKA_GROUP_ID: ${KAFKA_GROUP_ID_TEAMMATE_SEARCH:-teammate-search}
+      FILTERDATA_TOPIC: ${FILTERDATA_TOPIC:-filter.data}
+      USERPOPULARITY_TOPIC: ${USERPOPULARITY_TOPIC:-user.popularity}
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_DB: ${REDIS_DB:-0}
       REDIS_TTL_SECONDS: ${REDIS_TTL_SECONDS:-600}
 
+  broker-kafka:
+    image: confluentinc/cp-kafka:8.1.0
+    container_name: broker-kafka
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_ENABLE_KRAFT: yes
+      KAFKA_LISTENERS: PLAINTEXT://:9094,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker-kafka:9094
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker-kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+    healthcheck:
+      test: ["CMD", "bash", "-c", "kafka-topics --bootstrap-server localhost:9094 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    ports:
+      - "9094:9094"
+      - "9093:9093"
+    volumes:
+      - broker-kafka-data:/var/lib/kafka/data
+
   redis:
     image: redis:7-alpine
-    container_name: teamate-search-redis
+    container_name: teammate-search-redis
     ports:
       - "6379:6379"
     command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
 
   redis-ui:
     image: rediscommander/redis-commander:latest
-    container_name: teamate-search-redis-ui
+    container_name: teammate-search-redis-ui
     depends_on:
       redis:
         condition: service_started
@@ -41,3 +86,7 @@ services:
       - REDIS_HOSTS=local:redis:6379
       - HTTP_USER=admin
       - HTTP_PASSWORD=
+
+volumes:
+  teammate-db-data:
+  broker-kafka-data:

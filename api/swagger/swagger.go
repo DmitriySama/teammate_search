@@ -3,8 +3,8 @@ package swagger
 import _ "embed"
 
 //go:embed web.swagger.json
-var registrySpec []byte
+var tsSpec []byte
 
-func Registry() []byte {
-	return registrySpec
+func Teammate_search() []byte {
+	return tsSpec
 }

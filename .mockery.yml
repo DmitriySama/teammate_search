@@ -1,13 +1,19 @@
+all: true
+dir: "mocks"
+with-expecter: true
+resolve-type-alias: false
+disable-version-string: true
+issue-845-fix: true
 packages:
   github.com/DmitriySama/teammate_search/internal/services/teammateSearchService:
     interfaces:
       UsersStorage:
         config:
-          dir: internal/services/registryService/mocks
+          dir: internal/services/teammateSearchService/mocks
           filename: storage.go
           outpkg: mocks
       UsersCache:
         config:
-          dir: internal/services/registryService/mocks
+          dir: internal/services/teammateSearchService/mocks
           filename: cache.go
           outpkg: mocks
