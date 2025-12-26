@@ -12,8 +12,10 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /bin/teammate-search /app/teammate-search
 COPY config.yml /app/config.yml
+COPY --from=builder src/internal/frontend /app/internal/frontend
 ENV PORT=3000
 ENV CONFIG_PATH=/app/config.yml
+ENV FRONTEND_PATH=/app/internal/frontend
 EXPOSE 3000
 
 CMD ["/app/teammate-search"]

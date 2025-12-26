@@ -10,6 +10,9 @@ services:
       POSTGRES_PASSWORD: ${TEAMMATE_DB_PASSWORD:-teammate_search}
     volumes:
       - teammate-db-data:/var/lib/postgresql/data
+      - ./internal/storage/pgstorage/migrations:/docker-entrypoint-initdb.d:ro
+    command: >
+      postgres -c log_statement=all -c log_duration=on
 
   teammate-search-service:
     build: .
@@ -39,6 +42,7 @@ services:
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_DB: ${REDIS_DB:-0}
       REDIS_TTL_SECONDS: ${REDIS_TTL_SECONDS:-600}
+      FRONTEND_PATH: /app/internal/frontend
 
   broker-kafka:
     image: confluentinc/cp-kafka:8.1.0
@@ -55,7 +59,8 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_LOG_DIRS: /var/lib/kafka/data
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_NUM_PARTITIONS: '1'
     healthcheck:
       test: ["CMD", "bash", "-c", "kafka-topics --bootstrap-server localhost:9094 --list >/dev/null 2>&1"]
       interval: 10s

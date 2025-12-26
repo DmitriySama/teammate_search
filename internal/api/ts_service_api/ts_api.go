@@ -104,20 +104,18 @@ func (a *API) LoginPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func getFrontendPath() string {
-    // Директория исполняемого файла (X/cmd/app/)
-    exePath, err := os.Executable()
-    if err != nil {
-        panic(err)
+    path := os.Getenv("FRONTEND_PATH")
+    if path == "" {
+        // fallback на локальную разработку
+        exePath, err := os.Executable()
+        if err != nil {
+            panic(err)
+        }
+        exeDir := filepath.Dir(exePath)
+        return filepath.Join(filepath.Dir(filepath.Dir(exeDir)), "internal", "frontend")
     }
-
-    exeDir := filepath.Dir(exePath)
-    // log.Println("exeDir", exeDir)
-    // // Поднимаемся на 2 уровня вверх: app/ -> cmd/ -> X/
-    // rootDir := filepath.Dir(filepath.Dir(exeDir))
+    return path
     
-    // // Идём в internal/frontend/
-    // log.Println(rootDir)
-    return filepath.Join(exeDir, "internal", "frontend")
 }
 
 func (a *API) LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -353,7 +351,7 @@ func (a *API) swaggerUI(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprint(w, `<!DOCTYPE html>
 		<html>
 		<head>
-		<title>Task Registry API</title>
+		<title>Teammate Registry API</title>
 		<link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
 		</head>
 		<body>

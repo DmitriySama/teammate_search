@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-
+	"time"
+	"os"
 	"github.com/segmentio/kafka-go"
 
 	"github.com/DmitriySama/teammate_search/config"
@@ -22,6 +23,8 @@ func NewWriter(cfg *config.Config, topic string) *kafka.Writer {
 		Topic:      topic,
 		Balancer:   &kafka.LeastBytes{},
 		BatchBytes: cfg.Kafka.MaxMessageBytes,
+		Logger:     log.New(os.Stdout, "KAFKA-WRITER: ", log.LstdFlags), // 🔥
+		ErrorLogger: log.New(os.Stderr, "KAFKA-WRITER-ERROR: ", log.LstdFlags), // 🔥
 	}
 
 	return kafka.NewWriter(writerCfg)
@@ -41,6 +44,9 @@ func (m *Manager) SendFilterData(ctx context.Context, response models.FilterData
 		return err
 	}
 
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
 	log.Printf("Kafka: отправка ответа в топик %s", m.filterTopic.Topic)
 	if err := m.filterTopic.WriteMessages(ctx, kafka.Message{Value: data}); err != nil {
 		log.Printf("Kafka: ошибка отправки сообщения в топик %s: %v", m.filterTopic.Topic, err)
@@ -53,6 +59,8 @@ func (m *Manager) SendFilterData(ctx context.Context, response models.FilterData
 
 
 func (m *Manager) SendUserPopularityData(ctx context.Context, username string) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 
 	log.Printf("Kafka: отправка ответа в топик %s", m.userPopularityTopic.Topic,)
 	if err := m.userPopularityTopic.WriteMessages(ctx, kafka.Message{Value: []byte(username)}); err != nil {

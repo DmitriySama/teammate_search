@@ -12,7 +12,7 @@ kafka:
   brokers:
     - broker-kafka:9094
   groupId: teammate-search
-  maxMessageBytes: 33554432
+  maxMessageBytes: 1048588
 
 topics:
   filterData: filter.data
