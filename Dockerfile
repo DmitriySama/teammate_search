@@ -12,9 +12,9 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /bin/teammate-search /app/teammate-search
 COPY config.yml /app/config.yml
-ENV PORT=8063
+ENV PORT=3000
 ENV CONFIG_PATH=/app/config.yml
-EXPOSE 8063
+EXPOSE 3000
 
 CMD ["/app/teammate-search"]
 

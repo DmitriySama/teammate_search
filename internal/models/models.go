@@ -37,7 +37,8 @@ type UserListShow struct {
 }
 
 type FilterData struct {
-	Age int `json:"age"`
+	Age0 int `json:"age0"`
+	Age1 int `json:"age1"`
 	Game string `json:"game"`
 	Genre string `json:"genre"`
 	Language string `json:"language"`

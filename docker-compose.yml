@@ -5,7 +5,7 @@ services:
     image: postgres:18-alpine
     container_name: teammate-db
     environment:
-      POSTGRES_DB: ${TEAMMATE_DB_NAME:-teammate_search}
+      POSTGRES_DB: ${TEAMMATE_DB_NAME:-teammates_data}
       POSTGRES_USER: ${TEAMMATE_DB_USER:-teammate_search}
       POSTGRES_PASSWORD: ${TEAMMATE_DB_PASSWORD:-teammate_search}
     volumes:
@@ -22,19 +22,19 @@ services:
       redis:
         condition: service_started
     ports:
-      - "8063:8063"
+      - "3000:3000"
     environment:
       SERVICE_NAME: ${TEAMMATE_SEARCH_SERVICE_NAME:-teammate-search}
-      PORT: ${TEAMMATE_SEARCH_PORT:-8063}
-      DATABASE_HOST: teammate-search-db
+      PORT: ${TEAMMATE_SEARCH_PORT:-3000}
+      DATABASE_HOST: localhost
       DATABASE_PORT: 5432
       DATABASE_NAME: ${TEAMMATE_SEARCH_DB_NAME:-teammates_data}
       DATABASE_USER: ${TEAMMATE_SEARCH_DB_USER:-postgres}
       DATABASE_PASSWORD: ${TEAMMATE_SEARCH_DB_PASSWORD:-Win}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-broker-kafka:9094}
       KAFKA_GROUP_ID: ${KAFKA_GROUP_ID_TEAMMATE_SEARCH:-teammate-search}
-      FILTERDATA_TOPIC: ${FILTERDATA_TOPIC:-filter.data}
-      USERPOPULARITY_TOPIC: ${USERPOPULARITY_TOPIC:-user.popularity}
+      FILTER_DATA_TOPIC: ${FILTERDATA_TOPIC:-filter.data}
+      USER_POPULARITY_TOPIC: ${USERPOPULARITY_TOPIC:-user.popularity}
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_DB: ${REDIS_DB:-0}
@@ -66,6 +66,19 @@ services:
       - "9093:9093"
     volumes:
       - broker-kafka-data:/var/lib/kafka/data
+
+  broker-kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: broker-kafka-ui
+    depends_on:
+      broker-kafka:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=broker-kafka:9094
+      - KAFKA_CLUSTERS_0_NAME=kraft
+      - KAFKA_UI_AUTH_ENABLED=false
 
   redis:
     image: redis:7-alpine

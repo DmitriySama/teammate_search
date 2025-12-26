@@ -66,7 +66,7 @@ type SelectUser struct {
 }
 
 func (a *API) SelectUser(w http.ResponseWriter, r *http.Request) {    
-    
+    a.EmptyUserCheck(w, r)
     var req SelectUser
     if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
         w.Header().Set("Content-Type", "application/json")
@@ -75,9 +75,8 @@ func (a *API) SelectUser(w http.ResponseWriter, r *http.Request) {
     a.pg.SelectUser(req.Username)
 }
 
-
 func (a *API) RegisterPage(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "../frontend/register.html")
+	template.Must(template.ParseFiles(getFrontendPath()+"/register.html")).Execute(w, nil)
 }
 
 func (a *API) RegisterHandler(w http.ResponseWriter, r *http.Request) {
@@ -93,7 +92,7 @@ func (a *API) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		if result.Success {
 			log.Printf("Пользователь зарегистрирован: ID=%d", result.User.ID)
 			a	.user = result.User
-			http.Redirect(w, r, "/main/main", http.StatusSeeOther)
+			http.Redirect(w, r, "/main/home", http.StatusSeeOther)
 		} else {
 			log.Printf("Ошибка регистрации: %s", result.Message)
 		}
@@ -112,12 +111,13 @@ func getFrontendPath() string {
     }
 
     exeDir := filepath.Dir(exePath)
+    // log.Println("exeDir", exeDir)
+    // // Поднимаемся на 2 уровня вверх: app/ -> cmd/ -> X/
+    // rootDir := filepath.Dir(filepath.Dir(exeDir))
     
-    // Поднимаемся на 2 уровня вверх: app/ -> cmd/ -> X/
-    rootDir := filepath.Dir(filepath.Dir(exeDir))
-    
-    // Идём в internal/frontend/
-    return filepath.Join(rootDir, "internal", "frontend")
+    // // Идём в internal/frontend/
+    // log.Println(rootDir)
+    return filepath.Join(exeDir, "internal", "frontend")
 }
 
 func (a *API) LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -141,14 +141,18 @@ func (a *API) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 
 func (a *API) MainMainHandler(w http.ResponseWriter, r *http.Request) {    
-    a.EmptyUserCheck(w, r)
+    if a.EmptyUserCheck(w, r) {
+        return
+    }
 
 	profileData := a.GetDataToShow(r, "main")
 	template.Must(template.ParseFiles(getFrontendPath()+"/main.html")).Execute(w, profileData)
 }
 
 func (a *API) MainSearchHandler(w http.ResponseWriter, r *http.Request) {    
-    a.EmptyUserCheck(w, r)
+    if a.EmptyUserCheck(w, r) {
+        return
+    }
     profileData := a.GetDataToShow(r, "search")
 	
 	if r.Method == "GET" {
@@ -162,15 +166,19 @@ func (a *API) MainSearchHandler(w http.ResponseWriter, r *http.Request) {
         } else {
             // Отправление данных фильтров через KAFKA
             age, _ := strconv.Atoi(r.FormValue("age"))
+            age1, _ := strconv.Atoi(r.FormValue("age1"))
             fd := models.FilterData{
-                Age: age,
+                Age0: age,
+                Age1: age1,
                 Game: r.FormValue("game"),
                 Genre: r.FormValue("genre"),
                 Language: r.FormValue("language"),
                 App: r.FormValue("app"),
             }
-            a.pg.FilterData(fd)
-
+            err := a.pg.FilterData(fd)
+            if err != nil {
+                log.Println("===========")
+            }
             // Получение пользователей
             users, _ := a.pg.GetUsers(r)
             users_v2 := []models.UserListShow{}
@@ -203,13 +211,19 @@ func (a *API) MainSearchHandler(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func (a *API) EmptyUserCheck(w http.ResponseWriter, r *http.Request) {
-    if a.user.Username == "" {
+func (a *API) EmptyUserCheck(w http.ResponseWriter, r *http.Request) bool {
+    log.Printf("api: %+v\n", a)
+    if a.user == nil {
         http.Redirect(w, r, "/login", http.StatusSeeOther)
+        return true
     }
+    return false
 }
 
 func (a *API) HandleGetProfile(w http.ResponseWriter, r *http.Request) {	
+    if a.EmptyUserCheck(w, r) {
+        return
+    }
 	profileData := a.GetDataToShow(r, "GetProfile")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	template.Must(template.ParseFiles(getFrontendPath()+"/profile_look.html")).Execute(w, profileData)
@@ -277,6 +291,9 @@ func (a *API) GetDataToShow(r *http.Request, choise string) (map[string]interfac
 
 
 func (a *API) HandleUpdateProfile(w http.ResponseWriter, r *http.Request) {
+    if a.EmptyUserCheck(w, r) {
+        return
+    }
     if r.Method == "POST" {
         err := a.pg.UpdateUser(r, *a.user)
         if err == nil {

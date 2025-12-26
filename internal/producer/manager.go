@@ -14,11 +14,9 @@ import (
 type Manager struct {
 	filterTopic *kafka.Writer
 	userPopularityTopic *kafka.Writer
-	updateTopic *kafka.Writer
 }
 
 func NewWriter(cfg *config.Config, topic string) *kafka.Writer {
-	log.Println("cfg != nil: ", cfg != nil)
 	writerCfg := kafka.WriterConfig{
 		Brokers:    cfg.Kafka.Brokers,
 		Topic:      topic,
@@ -31,39 +29,28 @@ func NewWriter(cfg *config.Config, topic string) *kafka.Writer {
 
 func NewManager(cfg *config.Config) *Manager {
 	return &Manager{
-		filterTopic: NewWriter(cfg, "filter.data"),
 		userPopularityTopic: NewWriter(cfg, "user.popularity"),
-		updateTopic: NewWriter(cfg, "update.user.data"),
+		filterTopic: NewWriter(cfg, "filter.data"),
 	}
 }
 
-func (m *Manager) SendFilterData(ctx context.Context, response models.FilterData) {
+func (m *Manager) SendFilterData(ctx context.Context, response models.FilterData) error {
 	data, err := json.Marshal(response)
 	if err != nil {
 		log.Printf("Kafka: ошибка сериализации данных фильтрации %v", err)
+		return err
 	}
 
-	log.Printf("Kafka: отправка ответа в топик %s", m.filterTopic.Topic,)
+	log.Printf("Kafka: отправка ответа в топик %s", m.filterTopic.Topic)
 	if err := m.filterTopic.WriteMessages(ctx, kafka.Message{Value: data}); err != nil {
 		log.Printf("Kafka: ошибка отправки сообщения в топик %s: %v", m.filterTopic.Topic, err)
+		return err
 	}
 
-	log.Printf("Kafka: успешно отправлен ответ для приказа")
+	log.Printf("Kafka: данные фильтрации успешно отправлены")
+	return nil
 }
 
-func (m *Manager) SendUserUpdateData(ctx context.Context, response models.UpdateUserData) {
-	data, err := json.Marshal(response)
-	if err != nil {
-		log.Printf("Kafka: ошибка сериализации новых данных пользователя %v", err)
-	}
-
-	log.Printf("Kafka: отправка ответа в топик %s", m.updateTopic.Topic,)
-	if err := m.updateTopic.WriteMessages(ctx, kafka.Message{Value: data}); err != nil {
-		log.Printf("Kafka: ошибка отправки сообщения в топик %s: %v", m.updateTopic.Topic, err)
-	}
-
-	log.Printf("Kafka: успешно отправлен ответ для приказа")
-}
 
 func (m *Manager) SendUserPopularityData(ctx context.Context, username string) {
 

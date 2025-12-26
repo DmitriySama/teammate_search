@@ -27,8 +27,8 @@ type DatabaseConfig struct {
 
 
 func LoadConfig() (*Config, error) {
-	configPath := "../../config.yml"
-	file, err := os.Open(configPath)
+	path := os.Getenv("CONFIG_PATH")
+	file, err := os.Open(path)
     if err != nil {
         return nil, fmt.Errorf("не удалось открыть файл конфигурации: %w", err)
     }

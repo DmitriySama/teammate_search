@@ -79,8 +79,9 @@ func (pg *PGstorage) SelectUser(username string) {
     pg.producer.SendUserPopularityData(context.Background(), username)
 }   
 
-func (pg *PGstorage) FilterData(fd models.FilterData) {
-    pg.producer.SendFilterData(context.Background(), fd)
+func (pg *PGstorage) FilterData(fd models.FilterData) error {
+    err := pg.producer.SendFilterData(context.Background(), fd)
+    return err
 }   
 
 

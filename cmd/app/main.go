@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 
 	"github.com/DmitriySama/teammate_search/config"
 	"github.com/DmitriySama/teammate_search/internal/bootstrap"
@@ -9,6 +10,7 @@ import (
 
 func main() {
 	cfg, _ := config.LoadConfig()
+	log.Println(cfg != nil)
 	producer := bootstrap.InitProducers(cfg)
 
 	storage:= bootstrap.InitPGStorage(cfg, producer)

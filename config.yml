@@ -1,12 +1,12 @@
-serviceName: user_activity_service
+serviceName: teammate-search
 port: 3000
 
 database:
-  host: localhost
+  host: teammate-db
   port: 5432
   dbname: teammates_data
-  username: postgres
-  password: Win
+  username: teammate_search
+  password: teammate_search
 
 kafka:
   brokers:
@@ -19,7 +19,7 @@ topics:
   userPopularity: user.popularity
 
 redis:
-  host: localhost 
+  host: redis 
   port: 6379
   db: 0
   ttlSeconds: 600

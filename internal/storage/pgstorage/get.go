@@ -184,6 +184,7 @@ func (pg *PGstorage) GetUsers(r *http.Request) (*sql.Rows, error) {
         LEFT JOIN apps a ON u.speaking_app = a.id_app
         LEFT JOIN games g1 ON u.most_like_game = g1.id_game
         WHERE u.age between $1 and $2 `
+        
     if r.FormValue("genre") != "-1" {
         query += ` and u.most_like_genre = ` + r.FormValue("genre")
     }
@@ -193,7 +194,20 @@ func (pg *PGstorage) GetUsers(r *http.Request) (*sql.Rows, error) {
     if r.FormValue("language") != "-1" {
         query += ` and u.language = ` + r.FormValue("language")
     }
-    rows, err := pg.DB.Query(query, r.FormValue("age0"), r.FormValue("age1"))
+
+    var age0, age1 string
+    if r.FormValue("age0") == "" {
+        age0 = "0"
+    } else {
+        age0 = r.FormValue("age0")
+    }
+    if r.FormValue("age1") == "" {
+        age1 = "100"
+    } else {
+        age1 = r.FormValue("age1")
+    }
+
+    rows, err := pg.DB.Query(query, age0, age1)
     if err != nil {
         log.Fatal("Ошибка при выполнении запроса: ", err.Error())
         return nil, err

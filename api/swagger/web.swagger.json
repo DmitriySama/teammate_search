@@ -1,38 +1,360 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Task Registry API",
-    "version": "1.0.0",
-    "description": "REST эндпоинты для управления информацией о задачах в реестре"
+    "title": "Teammate Web API",
+    "version": "1.0.0"
   },
   "paths": {
     "/health": {
       "get": {
-        "summary": "Проверка работоспособности сервиса",
+        "summary": "Health check",
         "responses": {
           "200": {
-            "description": "Сервис работает",
+            "description": "Service is healthy"
+          }
+        }
+      }
+    },
+    "/login": {
+      "get": {
+        "summary": "Render login page",
+        "responses": {
+          "200": {
+            "description": "HTML login page",
             "content": {
-              "application/json": {
+              "text/html": {}
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Login user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect to /main/home after successful login",
+            "headers": {
+              "Location": {
                 "schema": {
-                  "$ref": "#/components/schemas/Health"
+                  "type": "string",
+                  "example": "/main/home"
                 }
               }
+            }
+          },
+          "400": {
+            "description": "Invalid credentials or bad request"
+          }
+        }
+      }
+    },
+    "/register": {
+      "get": {
+        "summary": "Render registration page",
+        "responses": {
+          "200": {
+            "description": "HTML registration page",
+            "content": {
+              "text/html": {}
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Register user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect to /main/home after successful registration",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string",
+                  "example": "/main/home"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid registration data"
+          }
+        }
+      }
+    },
+    "/main/home": {
+      "get": {
+        "summary": "Render home page",
+        "responses": {
+          "200": {
+            "description": "HTML home page",
+            "content": {
+              "text/html": {}
             }
           }
         }
       }
-    }  
+    },
+    "/main/search": {
+      "get": {
+        "summary": "Render search page",
+        "responses": {
+          "200": {
+            "description": "HTML search page",
+            "content": {
+              "text/html": {}
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Search users with filters and re-render page with results",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/FilterData"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FilterData"
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Переход на /main/search",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string",
+                  "example": "/main/search"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "HTML search page with filtered results",
+            "content": {
+              "text/html": {}
+            }
+          },
+          "400": {
+            "description": "Invalid filter data"
+          }
+        }
+      }
+    },
+    "/profile/look": {
+      "get": {
+        "summary": "Render profile view page",
+        "responses": {
+          "200": {
+            "description": "HTML profile page with user data",
+            "content": {
+              "text/html": {}
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/profile/update": {
+      "get": {
+        "summary": "Render profile update page",
+        "responses": {
+          "200": {
+            "description": "страница обновления пользователя",
+            "content": {
+              "text/html": {}
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "post": {
+        "summary": "обновление и переход на /profile/look",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect to /profile/look after successful update",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string",
+                  "example": "/profile/look"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid profile data"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    }
   },
   "components": {
     "schemas": {
-      "Health": {
+      "LoginRequest": {
         "type": "object",
         "properties": {
-          "service": {
+          "username": {
             "type": "string"
           },
-          "status": {
+          "password": {
+            "type": "string",
+            "format": "password"
+          }
+        },
+        "required": ["username", "password"]
+      },
+      "FilterData": {
+        "type": "object",
+        "properties": {
+          "age0": {
+            "type": "string"
+          },
+          "age1": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "game": {
+            "type": "string"
+          },
+          "genre": {
+            "type": "string"
+          },
+          "app": {
+            "type": "string"
+          }
+        },
+        "required": ["age0", "age1", "game", "genre", "app", "language"]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          },
+          "description": {
+            "type": "string"
+          },
+          "age": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "app": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "game": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "genre": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lang": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "username",
+          "password",
+          "age",
+          "app",
+          "game",
+          "genre",
+          "lang"
+        ]
+      },
+      "UserUpdate": {
+        "type": "object",
+        "properties": {
+          "age": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "game": {
+            "type": "string"
+          },
+          "genre": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "app": {
             "type": "string"
           }
         }
@@ -40,4 +362,3 @@
     }
   }
 }
-
