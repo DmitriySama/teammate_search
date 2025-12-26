@@ -17,4 +17,3 @@ ENV CONFIG_PATH=/app/config.yml
 EXPOSE 3000
 
 CMD ["/app/teammate-search"]
-

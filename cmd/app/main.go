@@ -10,6 +10,7 @@ import (
 
 func main() {
 	cfg, _ := config.LoadConfig()
+
 	log.Println(cfg != nil)
 	producer := bootstrap.InitProducers(cfg)
 
@@ -17,6 +18,5 @@ func main() {
 	cache := bootstrap.InitCache(cfg)
 	service := bootstrap.InitTSService(storage, cache)
 	api := bootstrap.InitRegistryAPI(service, cfg.ServiceName, storage)
-
 	bootstrap.AppRun(context.Background(), cfg, api)
 }
